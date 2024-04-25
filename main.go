@@ -29,16 +29,33 @@ func main() {
 	email := env.GetEnv("EMAIL")
 	password := env.GetEnv("PASSWORD")
 
-	_, err = authTokenDb.FetchAuthToken(email)
-	if err != nil {
-		fmt.Println("No token found, need to get a new one")
+	authToken, _ := authTokenDb.FetchAuthToken(email)
 
-		wsLogin := wealthsimple.WealthSimpleLogin{Email: email, Password: password}
-		err := wsLogin.InitOtpClaim()
+	if authToken == nil || authToken.IsTokenExpired() {
+		authToken, err = RunLoginProcess(email, password)
 		if err != nil {
 			panic(err)
 		}
 
+		authTokenDb.InsertAuthToken(authToken)
 	}
 
+	fmt.Println("Auth token aquired!")
+	fmt.Println(authToken.AccessToken)
+}
+
+func RunLoginProcess(email, password string) (*db.AuthToken, error) {
+	fmt.Println("No token found, need to get a new one")
+
+	wsLogin := wealthsimple.WealthSimpleLogin{Email: email, Password: password}
+	err := wsLogin.InitOtpClaim()
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Print("Enter OTP code: ")
+	var otp string
+	fmt.Scanln(&otp)
+
+	return wsLogin.LoginWithOtp(otp)
 }

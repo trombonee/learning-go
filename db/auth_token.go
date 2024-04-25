@@ -1,16 +1,39 @@
 package db
 
-import "fmt"
+import (
+	"fmt"
+	"strconv"
+	"time"
+)
 
-type AuthTokenDB struct {
-	db *Database
-}
+const expirationTime = 3600
 
 type AuthToken struct {
 	AccessToken  string
 	RefreshToken string
 	CreatedAt    string
 	Email        string
+}
+
+func (t *AuthToken) IsTokenExpired() bool {
+	if t.CreatedAt == "" {
+		return true
+	}
+
+	currTime := time.Now()
+
+	epochInt, err := strconv.ParseInt(t.CreatedAt, 10, 64)
+	if err != nil {
+		return true
+	}
+
+	createdAt := time.Unix(epochInt+expirationTime, 0)
+
+	return currTime.After(createdAt)
+}
+
+type AuthTokenDB struct {
+	db *Database
 }
 
 func (t AuthTokenDB) InsertAuthToken(token *AuthToken) error {
@@ -23,16 +46,16 @@ func (t AuthTokenDB) InsertAuthToken(token *AuthToken) error {
 	return err
 }
 
-func (t AuthTokenDB) FetchAuthToken(email string) (AuthToken, error) {
+func (t AuthTokenDB) FetchAuthToken(email string) (*AuthToken, error) {
 	var token AuthToken
 
 	if t.db == nil {
-		return token, fmt.Errorf("no reference to db on this auth_token instance")
+		return nil, fmt.Errorf("no reference to db on this auth_token instance")
 	}
 
 	err := t.db.QueryRow("SELECT access_token, refresh_token, created_at, email FROM auth_tokens WHERE email = ?", email).Scan(&token.AccessToken, &token.RefreshToken, &token.CreatedAt, &token.Email)
 
-	return token, err
+	return &token, err
 }
 
 func NewAuthTokenDB(db *Database) *AuthTokenDB {

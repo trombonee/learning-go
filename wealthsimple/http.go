@@ -7,27 +7,18 @@ import (
 	"net/http"
 )
 
-var baseHeaders = map[string]string{
-	"accept":                "application/json",
-	"accept-language":       "en-US,en;q=0.9",
-	"content-type":          "application/json",
-	"sec-ch-ua":             "\"Chromium\";v=\"122\", \"Not(A:Brand\";v=\"24\", \"Microsoft Edge\";v=\"122\"",
-	"sec-ch-ua-mobile":      "?0",
-	"sec-ch-ua-platform":    "\"Windows\"",
-	"sec-fetch-dest":        "empty",
-	"sec-fetch-mode":        "cors",
-	"sec-fetch-site":        "same-site",
-	"x-wealthsimple-client": "@wealthsimple/wealthsimple",
-}
-
 type Request struct {
 	req *http.Request
 }
 
-func (r *Request) AddBaseHeaders() {
-	for key, value := range baseHeaders {
+func (r *Request) AddHeaderGroup(headers map[string]string) {
+	for key, value := range headers {
 		r.req.Header.Add(key, value)
 	}
+}
+
+func (r *Request) AddHeader(key string, value string) {
+	r.req.Header.Add(key, value)
 }
 
 func (r *Request) MakeRequest() (*Response, error) {
