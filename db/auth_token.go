@@ -15,7 +15,7 @@ type AuthToken struct {
 	Email        string
 }
 
-func (t *AuthToken) IsTokenExpired() bool {
+func (t *AuthToken) IsExpired() bool {
 	if t.CreatedAt == "" {
 		return true
 	}

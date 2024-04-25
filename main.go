@@ -31,7 +31,7 @@ func main() {
 
 	authToken, _ := authTokenDb.FetchAuthToken(email)
 
-	if authToken == nil || authToken.IsTokenExpired() {
+	if authToken == nil || authToken.IsExpired() {
 		authToken, err = RunLoginProcess(email, password)
 		if err != nil {
 			panic(err)
@@ -44,6 +44,7 @@ func main() {
 	fmt.Println(authToken.AccessToken)
 }
 
+// This process should really happen through a frontend interaction
 func RunLoginProcess(email, password string) (*db.AuthToken, error) {
 	fmt.Println("No token found, need to get a new one")
 
